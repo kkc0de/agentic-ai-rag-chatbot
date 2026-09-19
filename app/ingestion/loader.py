@@ -1,15 +1,30 @@
 from pathlib import Path
 
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from pypdf import PdfReader
 from langchain_core.documents import Document
 
+def load_pdf(pdf_path: str) -> list[Document]:
+    pdf_file = Path(pdf_path)
 
-def load_documents(data_dir: Path) -> list[Document]:
-    """Load supported documents from the data directory."""
-    documents: list[Document] = []
-    for path in sorted(data_dir.iterdir()):
-        if path.suffix.lower() == ".pdf":
-            documents.extend(PyPDFLoader(str(path)).load())
-        elif path.suffix.lower() in {".txt", ".md"}:
-            documents.extend(TextLoader(str(path), encoding="utf-8").load())
+    if not pdf_file.exists():
+        raise FileNotFoundError(f"PDF not found: {pdf_file}")
+
+    reader = PdfReader(str(pdf_file))
+
+    documents = []
+
+    for page_number, page in enumerate(reader.pages, start=1):
+        text = page.extract_text() or ""
+
+        if text.strip():
+            documents.append(
+    Document(
+        page_content=text,
+        metadata={
+            "source": pdf_file.name,
+            "page": page_number,
+        },
+    )
+)
+
     return documents

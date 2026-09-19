@@ -1,10 +1,9 @@
 from typing import TypedDict
 
-from langchain_core.documents import Document
-
 
 class RAGState(TypedDict, total=False):
     question: str
-    context: list[Document]
+    context: list[str]
+    scores: list[float]
     answer: str
-    sources: list[str]
+    is_relevant: bool

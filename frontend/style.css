@@ -1,0 +1,386 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Inter, Arial, sans-serif;
+    background: #0b0d12;
+    color: #f4f4f5;
+    min-height: 100vh;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ---------- TOP BAR ---------- */
+
+.topbar {
+    height: 72px;
+    border-bottom: 1px solid #232630;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    background: #0f1117;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #0b0d12;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.brand h1 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.brand p {
+    font-size: 12px;
+    color: #8f93a1;
+    margin-top: 3px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a7abb8;
+    font-size: 13px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+}
+
+
+/* ---------- CHAT ---------- */
+
+.chat-container {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 150px;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* ---------- WELCOME ---------- */
+
+.welcome {
+    text-align: center;
+    margin: 80px auto 0;
+    max-width: 650px;
+}
+
+.welcome-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #0b0d12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+}
+
+.welcome h2 {
+    font-size: 30px;
+    margin-bottom: 12px;
+}
+
+.welcome p {
+    color: #9296a3;
+    line-height: 1.6;
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.suggestions button {
+    background: #151821;
+    border: 1px solid #292d38;
+    color: #cdd0d8;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.suggestions button:hover {
+    border-color: #555b6b;
+    background: #1b1e27;
+}
+
+
+/* ---------- MESSAGE ---------- */
+
+.message {
+    display: flex;
+    gap: 12px;
+    animation: appear 0.2s ease;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.avatar {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: #1b1e27;
+    color: #d7d9df;
+}
+
+.message.user .avatar {
+    order: 2;
+}
+
+.bubble {
+    max-width: 75%;
+    padding: 13px 16px;
+    border-radius: 14px;
+    line-height: 1.6;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.message.assistant .bubble {
+    background: #151821;
+    border: 1px solid #252934;
+    color: #e7e8eb;
+}
+
+.message.user .bubble {
+    background: #f4f4f5;
+    color: #111318;
+}
+
+
+/* ---------- SOURCES ---------- */
+
+.sources {
+    margin-top: 10px;
+    max-width: 75%;
+}
+
+.sources summary {
+    cursor: pointer;
+    color: #9da2b0;
+    font-size: 12px;
+}
+
+.source {
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #252934;
+    background: #101219;
+    border-radius: 10px;
+}
+
+.source-score {
+    font-size: 11px;
+    color: #8d93a1;
+    margin-bottom: 6px;
+}
+
+.source-text {
+    font-size: 12px;
+    color: #b9bdc8;
+    line-height: 1.5;
+}
+
+
+/* ---------- INPUT ---------- */
+
+.input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 18px 24px 14px;
+    background: linear-gradient(
+        transparent,
+        #0b0d12 25%
+    );
+}
+
+.input-wrapper {
+    max-width: 850px;
+    margin: 0 auto;
+    background: #151821;
+    border: 1px solid #303440;
+    border-radius: 15px;
+    padding: 8px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+textarea {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #f4f4f5;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    max-height: 120px;
+}
+
+textarea::placeholder {
+    color: #777c8a;
+}
+
+#sendButton {
+    border: none;
+    border-radius: 10px;
+    background: #f4f4f5;
+    color: #111318;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+#sendButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disclaimer {
+    text-align: center;
+    color: #676c79;
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+
+/* ---------- LOADING ---------- */
+
+.loading {
+    display: flex;
+    gap: 5px;
+    padding: 5px 0;
+}
+
+.loading span {
+    width: 6px;
+    height: 6px;
+    background: #888e9c;
+    border-radius: 50%;
+    animation: bounce 1s infinite;
+}
+
+.loading span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.loading span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 650px) {
+
+    .topbar {
+        padding: 0 16px;
+    }
+
+    .status {
+        display: none;
+    }
+
+    .chat-container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .welcome {
+        margin-top: 45px;
+    }
+
+    .welcome h2 {
+        font-size: 24px;
+    }
+
+    .bubble,
+    .sources {
+        max-width: 90%;
+    }
+
+    .input-area {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
