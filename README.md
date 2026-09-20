@@ -709,4 +709,7 @@ Potential improvements include:
 
 # 📄 License
 
-This project is licensed under the MIT License.
+This project's source code is licensed under the MIT License.
+
+The Agentic AI eBook used as the knowledge base remains the property
+of its respective copyright holders.
