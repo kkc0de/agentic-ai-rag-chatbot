@@ -1,11 +1,11 @@
 # 🤖 Agentic AI RAG Chatbot
 
-> A grounded Retrieval-Augmented Generation (RAG) chatbot that answers questions strictly from the **Agentic AI eBook** using semantic retrieval, LangGraph, Pinecone, and an LLM.
+> A production-ready Retrieval-Augmented Generation (RAG) chatbot that answers questions strictly from the **Agentic AI eBook** using semantic retrieval, Pinecone, LangGraph, FastAPI, and Groq.
 
 <p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-API-green?logo=fastapi)
+![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-green?logo=fastapi)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Orchestration-orange)
 ![Pinecone](https://img.shields.io/badge/Pinecone-Vector_DB-purple)
 ![Groq](https://img.shields.io/badge/Groq-LLM-black)
@@ -19,23 +19,30 @@
 
 | Resource | Link |
 |---|---|
-| 🔴 Live Demo | **Coming Soon** |
-| 💼 LinkedIn | **[Add LinkedIn Profile](#)** |
-| 📦 GitHub | **This Repository** |
-
-> The live deployment and LinkedIn link will be updated after deployment.
+| 🚀 Live Demo | https://agentic-ai-rag-frontend.vercel.app/ |
+| ⚡ Backend API | https://agentic-ai-rag-chatbot.vercel.app |
+| 📚 API Docs | https://agentic-ai-rag-chatbot.vercel.app/docs |
+| 💼 LinkedIn | https://www.linkedin.com/in/krishna-sharma-veltr0/ |
+| 📦 GitHub | https://github.com/kkc0de/agentic-ai-rag-chatbot |
 
 ---
 
 ## 📌 Overview
 
-This project implements a **Retrieval-Augmented Generation (RAG) chatbot** that answers user questions using information retrieved from an **Agentic AI eBook PDF**.
+This project implements a **Retrieval-Augmented Generation (RAG) chatbot** that answers questions using information retrieved from an **Agentic AI eBook PDF**.
 
-Instead of allowing the language model to answer using its general knowledge, the system retrieves relevant sections from the eBook and provides them as context to the LLM.
+The system is designed to keep responses grounded in the provided document instead of allowing the language model to freely answer from general knowledge.
 
-The system also includes a **relevance guard** that prevents the LLM from generating an answer when the retrieved content is not sufficiently relevant to the user's question.
+When a user asks a question, the system:
 
-The chatbot is exposed through a **FastAPI REST API** with interactive Swagger documentation.
+1. Converts the query into an embedding.
+2. Searches Pinecone for semantically relevant document chunks.
+3. Checks whether the retrieved content is sufficiently relevant.
+4. Uses LangGraph to control the RAG workflow.
+5. Generates an answer using the retrieved context.
+6. Returns the final answer along with retrieved context and similarity scores.
+
+For unrelated questions, the system refuses to answer rather than relying on outside knowledge.
 
 ---
 
@@ -43,170 +50,223 @@ The chatbot is exposed through a **FastAPI REST API** with interactive Swagger d
 
 - 📄 PDF document ingestion
 - ✂️ Recursive text chunking
-- 🧠 Local text embeddings using Sentence Transformers
-- 🔎 Semantic similarity search using Pinecone
+- 🧠 Pinecone-hosted text embeddings
+- 🔎 Semantic similarity search with Pinecone
 - 🔗 LangGraph-based RAG workflow
-- 🤖 Groq-hosted LLM generation
-- 🛡️ Context-grounded responses
+- 🤖 Groq-hosted LLM inference
+- 🛡️ Context-grounded generation
 - 🚫 Relevance guard for unrelated questions
 - 📊 Pinecone similarity scores
+- 📚 Retrieved context returned through the API
 - ⚡ FastAPI REST API
-- 📚 Retrieved context included in API response
-- 🧪 Swagger/OpenAPI documentation
+- 📖 Swagger/OpenAPI documentation
+- 🌐 Responsive web chat interface
+- ☁️ Vercel deployment
 - 🔐 Environment-variable based API key management
-## 🏗️ Architecture
+- 🔄 Separate frontend and backend deployment
+
+---
+
+# 🏗️ Architecture
 
 ```text
-                    ┌─────────────────────┐
-                    │    Agentic AI PDF   │
-                    └──────────┬──────────┘
-                               │
-                    │   PDF Text Loader   │
-                    └──────────┬──────────┘
+                    ┌──────────────────────┐
+                    │   Agentic AI eBook   │
+                    │         PDF          │
+                    └──────────┬───────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │  Text Chunking      │
-                    │ Recursive Splitter  │
-                    └──────────┬──────────┘
+                    ┌──────────────────────┐
+                    │      PDF Loader      │
+                    │        pypdf         │
+                    └──────────┬───────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │    Embeddings       │
-                    │ MiniLM-L6-v2        │
-                    └──────────┬──────────┘
+                    ┌──────────────────────┐
+                    │    Text Chunking     │
+                    │ Recursive Splitter   │
+                    │ 1000 / 150 overlap   │
+                    └──────────┬───────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │      Pinecone       │
-                    │    Vector Store     │
-                    └──────────┬──────────┘
+                    ┌──────────────────────┐
+                    │      Embeddings      │
+                    │ llama-text-embed-v2  │
+                    │      1024-dim        │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │      Pinecone        │
+                    │     Vector Store     │
+                    └──────────┬───────────┘
+                               │
                                │
                          User Question
                                │
                                ▼
-                    ┌─────────────────────┐
+                    ┌──────────────────────┐
+                    │      FastAPI         │
+                    │       /chat          │
+                    └──────────┬───────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │     LangGraph       │
-                    │   RAG Workflow      │
+                    ┌──────────────────────┐
+                    │      LangGraph       │
+                    │    RAG Workflow      │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │      Retrieval       │
+                    │       Top-K = 4      │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │   Relevance Guard    │
+                    └──────────┬───────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                 Relevant             Not Relevant
+                    │                     │
+                    ▼                     ▼
+             ┌─────────────┐      ┌─────────────┐
+             │   Groq LLM   │      │    Refuse    │
+             │   Generate   │      │   Response   │
+             └──────┬──────┘      └──────┬──────┘
+                    │                     │
                     └──────────┬──────────┘
-                               │
                                ▼
-                    ┌─────────────────────┐
-                    │     Retrieval       │
-                    │      Top-K = 4      │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │ Relevance Guard     │
-                    └──────┬───────┬──────┘
-                           │       │
-                     Relevant    Not Relevant
-                           │       │
-                           ▼       ▼
-                    ┌──────────┐  ┌──────────────┐
-                    │   LLM    │  │    Refuse    │
-                    │ Generate │  │   Response   │
-                    └────┬─────┘  └──────┬───────┘
-                         │               │
-                         └───────┬───────┘
-                                 ▼
-                         Final API Response
+                    ┌──────────────────────┐
+                    │  Answer + Context +  │
+                    │   Retrieval Score    │
+                    └──────────────────────┘
 ```
 
-## 🔄 How It Works
+---
 
-### 1. PDF Ingestion
+# 🔄 RAG Workflow
 
-The Agentic AI eBook is loaded page-by-page using pypdf.
+## 1. PDF Ingestion
 
-Each page is converted into a LangChain Document containing:
+The Agentic AI eBook is loaded page-by-page using `pypdf`.
+
+Each page is converted into a LangChain `Document` containing:
 
 - Page content
 - Source filename
 - Page number
 
-### 2. Text Chunking
+The current eBook produces **59 text-bearing pages** during ingestion.
 
-The extracted documents are split into smaller chunks using RecursiveCharacterTextSplitter.
+---
 
-Current configuration:
+## 2. Text Chunking
 
-- Chunk Size: 1000
-- Chunk Overlap: 150
+The extracted documents are split using LangChain's `RecursiveCharacterTextSplitter`.
 
-This allows the retrieval system to work with smaller, semantically meaningful pieces of the document.
-
-### 3. Embeddings
-
-Each chunk is converted into a numerical vector using:
+### Configuration
 
 ```text
-sentence-transformers/all-MiniLM-L6-v2
+Chunk Size:    1000
+Chunk Overlap: 150
 ```
 
-The embedding dimension is:
+The ingestion pipeline currently produces **114 chunks** from the eBook.
+
+Chunk metadata is preserved so retrieved results can be traced back to their source page.
+
+---
+
+## 3. Embeddings
+
+Document chunks and user queries are converted into vector representations using Pinecone's hosted embedding model:
 
 ```text
-384
+llama-text-embed-v2
 ```
 
-The same embedding model is used for both document chunks and user queries.
+Embedding dimension:
 
-### 4. Vector Storage
+```text
+1024
+```
 
-The generated vectors are stored in Pinecone using cosine similarity.
+Using hosted inference avoids loading a local transformer model into the application process, keeping the deployed API lightweight.
 
-Each stored vector also contains metadata such as:
+---
 
-- text
-- source
-- page
-### 5. Retrieval
+## 4. Vector Storage
+
+The generated embeddings are stored in **Pinecone** using cosine similarity.
+
+The current vector index is:
+
+```text
+agentic-ai-rag-v2
+```
+
+Each vector stores metadata including:
+
+- Text
+- Source
+- Page number
+
+---
+
+## 5. Retrieval
 
 When a user submits a question:
 
 ```text
-Question
-   ↓
-Embedding
-   ↓
-Pinecone similarity search
-   ↓
-Top 4 relevant chunks
+User Question
+      ↓
+Query Embedding
+      ↓
+Pinecone Similarity Search
+      ↓
+Top 4 Retrieved Chunks
+      ↓
+LangGraph Workflow
 ```
 
-The retrieved chunks and their similarity scores are passed to the LangGraph workflow.
+The retrieved chunks and their similarity scores are passed into the RAG workflow.
 
-### 6. Relevance Guard
+---
 
-The system checks the highest retrieved similarity score before calling the LLM.
+## 6. Relevance Guard
 
-If the score is below the configured relevance threshold, the system does not ask the LLM to generate an answer.
+The system checks the highest retrieved similarity score before allowing LLM generation.
 
-Instead, it returns:
+If the highest score does not meet the configured relevance threshold, the generation step is skipped.
+
+The chatbot returns:
 
 ```text
 I could not find this information in the provided Agentic AI eBook.
 ```
 
-This helps prevent unrelated questions from being answered using the LLM's general knowledge.
+This prevents unrelated questions from being answered using the LLM's general knowledge.
 
-### 7. Grounded Generation
+---
 
-For relevant questions, the retrieved chunks are passed to the LLM as context.
+## 7. Grounded Generation
 
-The prompt explicitly instructs the model to:
+For relevant questions, the retrieved chunks are passed to the Groq-hosted LLM as context.
+
+The prompt instructs the model to:
 
 - Use only the provided context
 - Avoid outside knowledge
 - Avoid inventing information
-- Refuse when the answer is not present in the context
+- Refuse when the answer cannot be found in the provided context
+- Keep responses clear and concise
 
-## 🧩 LangGraph Workflow
+---
+
+# 🧩 LangGraph Workflow
 
 The RAG pipeline is orchestrated using LangGraph.
 
@@ -221,32 +281,44 @@ Check Relevance
   │
   ├───────────────┐
   │               │
+  ▼               ▼
 Relevant      Not Relevant
   │               │
   ▼               ▼
-Generate         Refuse
+Generate        Refuse
   │               │
   └───────┬───────┘
+          │
           ▼
          END
-  ```
+```
 
-  ## 🛠️ Tech Stack
+This separates retrieval, relevance checking, generation, and refusal into explicit workflow nodes.
 
-  | Technology | Purpose |
-  |---|---|
-  | Python | Core implementation |
-  | FastAPI | REST API |
-  | LangGraph | RAG workflow orchestration |
-  | LangChain | Prompting and document utilities |
-  | Pinecone | Vector database |
-  | Hugging Face / Sentence Transformers | Text embeddings |
-  | Groq | LLM inference |
-  | pypdf | PDF extraction |
-  | Uvicorn | ASGI server |
-  | Pydantic | API request/response validation |
+---
 
-  ## 📁 Project Structure
+# 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Python 3.12 | Core implementation |
+| FastAPI | REST API |
+| LangGraph | RAG workflow orchestration |
+| LangChain | Document and prompt utilities |
+| Pinecone | Vector database and hosted embeddings |
+| llama-text-embed-v2 | Text embeddings |
+| Groq | LLM inference |
+| pypdf | PDF extraction |
+| Uvicorn | ASGI server |
+| Pydantic | Request/response validation |
+| HTML/CSS/JavaScript | Frontend chat interface |
+| Vercel | Deployment |
+
+---
+
+# 📁 Project Structure
+
+```text
 agentic-ai-rag-chatbot/
 │
 ├── app/
@@ -282,6 +354,12 @@ agentic-ai-rag-chatbot/
 │   ├── __init__.py
 │   └── test_imports.py
 │
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   └── config.js
+│
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -289,50 +367,63 @@ agentic-ai-rag-chatbot/
 └── run.py
 ```
 
-## ⚙️ Installation
+---
 
-### 1. Clone the repository
+# ⚙️ Local Installation
+
+## 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/kkc0de/agentic-ai-rag-chatbot.git
 cd agentic-ai-rag-chatbot
 ```
 
-### 2. Create a virtual environment
+## 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
 ```
 
-### 3. Activate the environment
+## 3. Activate the environment
 
-#### Windows
+### Windows
 
 ```powershell
 .venv\Scripts\activate
 ```
 
-### 4. Install dependencies
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+## 4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 🔑 Environment Variables
+---
 
-Create a .env file in the project root.
+# 🔑 Environment Variables
+
+Create a `.env` file in the project root.
 
 ```env
 PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_INDEX_NAME=agentic-ai-rag
+PINECONE_INDEX_NAME=agentic-ai-rag-v2
 PINECONE_NAMESPACE=agentic-ai
-
 GROQ_API_KEY=your_groq_api_key
 ```
 
-Never commit the .env file to GitHub.
+Never commit the `.env` file to GitHub.
 
-## 📥 Index the eBook
+The repository includes `.env.example` as a template.
+
+---
+
+# 📥 Index the eBook
 
 Run the ingestion pipeline:
 
@@ -340,21 +431,25 @@ Run the ingestion pipeline:
 python scripts/ingest.py
 ```
 
-The pipeline:
+The pipeline performs:
 
 ```text
 PDF
  ↓
-Load pages
+Load Pages
  ↓
-Create chunks
+Create Chunks
  ↓
-Generate embeddings
+Generate Embeddings
  ↓
-Upload vectors to Pinecone
+Upload Vectors to Pinecone
 ```
 
-## 🚀 Run the API
+The current eBook ingestion creates 114 vectorized chunks.
+
+---
+
+# 🚀 Run the Backend Locally
 
 Start the FastAPI server:
 
@@ -362,23 +457,25 @@ Start the FastAPI server:
 uvicorn app.main:app --reload
 ```
 
-The API will be available at:
+The local API will run on:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-## 📚 API Documentation
+The local frontend can be served separately from the `frontend/` directory.
 
-FastAPI provides interactive Swagger documentation at:
+---
 
-```text
-http://127.0.0.1:8000/docs
-```
+# 📚 API Documentation
 
-### Health Check
+The deployed API provides interactive Swagger documentation:
 
-```text
+**[https://agentic-ai-rag-chatbot.vercel.app/docs](https://agentic-ai-rag-chatbot.vercel.app/docs)**
+
+## Health Check
+
+```http
 GET /health
 ```
 
@@ -391,15 +488,17 @@ Example response:
 }
 ```
 
-## 💬 Chat API
+---
 
-### Endpoint
+# 💬 Chat API
 
-```text
+## Endpoint
+
+```http
 POST /chat
 ```
 
-### Request
+## Request
 
 ```json
 {
@@ -407,7 +506,7 @@ POST /chat
 }
 ```
 
-### Response
+## Response
 
 ```json
 {
@@ -415,30 +514,57 @@ POST /chat
   "retrieved_context": [
     {
       "text": "Retrieved chunk from the Agentic AI eBook...",
-      "score": 0.81
+      "score": 0.58
     }
   ],
-  "retrieval_score": 0.81
+  "retrieval_score": 0.58
 }
 ```
 
-retrieval_score represents the highest Pinecone similarity score for the retrieved results. It is not a probability or guaranteed confidence percentage.
+### Response Fields
 
-## 🧪 Sample Queries
+| Field | Description |
+|---|---|
+| `answer` | Final grounded response generated by the LLM |
+| `retrieved_context` | Retrieved eBook chunks used by the RAG pipeline |
+| `score` | Pinecone similarity score for an individual chunk |
+| `retrieval_score` | Highest retrieved similarity score |
 
-The following queries can be used to test the chatbot:
+> `retrieval_score` is a similarity score, not a probability or guaranteed confidence percentage.
+
+---
+
+# 🧪 Sample Queries
+
+The chatbot can be tested with questions such as:
 
 ### In-domain queries
-1. What is Agentic AI?
 
-2. What are AI agents?
+```text
+What is Agentic AI?
+```
 
-3. How do AI agents differ from traditional AI systems?
+```text
+What are the key characteristics of Agentic AI?
+```
 
-4. What are the key characteristics of Agentic AI?
+```text
+What are AI agents?
+```
+
+```text
+How do AI agents differ from traditional AI systems?
+```
+
+```text
+What are some use cases of Agentic AI?
+```
 
 ### Out-of-domain query
-5. What is the capital of France?
+
+```text
+What is the capital of France?
+```
 
 Expected behavior:
 
@@ -446,88 +572,141 @@ Expected behavior:
 I could not find this information in the provided Agentic AI eBook.
 ```
 
-### Grounding test
-6. Ask a question whose answer is not contained in the eBook.
+The system should refuse rather than answer using the LLM's general knowledge.
 
-The chatbot should refuse instead of relying on the LLM's general knowledge.
+---
 
-## 🛡️ Grounding & Safety
+# 🛡️ Grounding Strategy
 
-The chatbot is designed to keep responses grounded in the provided eBook.
+The chatbot uses two complementary grounding mechanisms.
 
-Two layers are used:
-
-### Retrieval Relevance Guard
-
-A similarity threshold is applied to the retrieved results.
+## 1. Retrieval Relevance Guard
 
 ```text
-High relevance
-     ↓
-LLM generation allowed
-
-Low relevance
-     ↓
-Generation skipped
-     ↓
-Refusal response
+Query
+  ↓
+Pinecone Retrieval
+  ↓
+Similarity Check
+  ↓
+ ┌───────────────┐
+ │               │
+High Relevance  Low Relevance
+ │               │
+ ▼               ▼
+Generate       Refuse
 ```
 
-### Prompt-Level Grounding
+Low-relevance queries do not proceed to LLM generation.
 
-The LLM is explicitly instructed to answer only from the retrieved context and avoid outside knowledge.
+---
 
-These mechanisms reduce the risk of unsupported answers.
+## 2. Prompt-Level Grounding
 
-## 📊 Tested Behavior
+The LLM receives explicit instructions to:
 
-The system has been tested with both relevant and unrelated questions.
+- Use only retrieved context
+- Avoid external knowledge
+- Avoid assumptions
+- Avoid fabricated information
+- Refuse when the required information is unavailable
+
+Together, these mechanisms help keep responses grounded in the source document.
+
+---
+
+# 🌐 Deployment
+
+The application is deployed as two components.
+
+### Frontend
+
+Hosted on Vercel:
+
+[https://agentic-ai-rag-frontend.vercel.app/](https://agentic-ai-rag-frontend.vercel.app/)
+
+### Backend
+
+FastAPI backend hosted on Vercel:
+
+[https://agentic-ai-rag-chatbot.vercel.app/](https://agentic-ai-rag-chatbot.vercel.app/)
+
+### API Documentation
+
+[https://agentic-ai-rag-chatbot.vercel.app/docs](https://agentic-ai-rag-chatbot.vercel.app/docs)
+
+The frontend automatically uses the local backend during local development and the deployed backend when running from the production frontend.
+
+---
+
+# ✅ Tested Behavior
+
+The deployed application has been tested with both relevant and unrelated questions.
 
 ### Relevant Query
-Question:
-What is Agentic AI?
 
-The system retrieves relevant eBook chunks and generates an answer using the retrieved context.
+```text
+What is Agentic AI?
+```
+
+The system retrieves relevant chunks from the Agentic AI eBook and generates an answer using the retrieved context.
 
 ### Unrelated Query
-Question:
+
+```text
 What is the capital of France?
+```
 
-The retrieval scores are significantly lower than those observed for relevant eBook questions, triggering the relevance guard.
+The relevance guard identifies the query as unrelated to the indexed eBook content and returns the grounded refusal response.
 
-The system returns the grounded refusal response instead of answering from general knowledge.
+### Additional verified queries
 
-## 🔮 Future Improvements
+The deployed UI was also tested with questions covering:
 
-Possible future improvements include:
+- Agentic AI concepts
+- AI agents
+- Characteristics of Agentic AI
+- Differences between agentic and traditional AI systems
+- Agentic AI use cases
 
-- 💬 Web-based chat interface
+---
+
+# 🔮 Future Improvements
+
+Potential improvements include:
+
 - 📡 Streaming responses
 - 🧠 Conversation memory
 - 🔍 Hybrid search
-- 🎯 Reranking retrieved chunks
-- 🐳 Docker deployment
-- ☁️ Cloud deployment
-- 📈 RAG evaluation and tracing
+- 🎯 Retrieval reranking
+- 📈 Automated RAG evaluation
+- 🔎 LangSmith tracing
 - 🔐 API authentication
+- 🐳 Docker support
+- 📊 Advanced retrieval analytics
+- ⚡ Response caching
 
-## 👨‍💻 Author
+---
 
-Krishna Kant Sharma
+# 👨‍💻 Author
 
-AI / ML Engineer | Generative AI | RAG | LangGraph | Python
+## Krishna Kant Sharma
+
+**AI / ML Engineer | Generative AI | RAG | LangGraph | Python**
 
 ### Connect
-💼 LinkedIn: Add LinkedIn URL
-🌐 Live Demo: Coming Soon
-📦 GitHub: Add Repository URL
 
-## 📄 License
+💼 **LinkedIn:**
+[https://www.linkedin.com/in/krishna-sharma-veltr0/](https://www.linkedin.com/in/krishna-sharma-veltr0/)
+
+🚀 **Live Project:**
+[https://agentic-ai-rag-frontend.vercel.app/](https://agentic-ai-rag-frontend.vercel.app/)
+
+📦 **GitHub:**
+[https://github.com/kkc0de/agentic-ai-rag-chatbot](https://github.com/kkc0de/agentic-ai-rag-chatbot)
+
+---
+
+# 📄 License
 
 This project is licensed under the MIT License.
-
-## 🖥️ Demo
-
-[UI Screenshot / GIF]
-
-Live Demo → ...
