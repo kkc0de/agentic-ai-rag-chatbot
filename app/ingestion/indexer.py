@@ -1,25 +1,23 @@
-from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 
 from app.config import (
     EMBEDDING_DIMENSION,
+    EMBEDDING_MODEL,
     PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     PINECONE_NAMESPACE,
 )
 
 
-def create_embedding_model():
-    return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
-
-
-def create_pinecone_index():
+def create_pinecone_client():
     if not PINECONE_API_KEY:
         raise ValueError("PINECONE_API_KEY is not set")
 
-    pc = Pinecone(api_key=PINECONE_API_KEY)
+    return Pinecone(api_key=PINECONE_API_KEY)
+
+
+def create_pinecone_index():
+    pc = create_pinecone_client()
 
     if not pc.has_index(PINECONE_INDEX_NAME):
         pc.create_index(
@@ -35,43 +33,78 @@ def create_pinecone_index():
     return pc.Index(PINECONE_INDEX_NAME)
 
 
-def index_documents(documents):
-    embedding_model = create_embedding_model()
-    index = create_pinecone_index()
+def embed_texts(texts: list[str], input_type: str):
+    pc = create_pinecone_client()
 
-    vectors = []
-
-    for i, document in enumerate(documents):
-        vector = embedding_model.embed_query(document.page_content)
-
-        vectors.append(
-            {
-                "id": f"chunk-{i:04d}",
-                "values": vector,
-                "metadata": {
-                    "text": document.page_content,
-                    "source": document.metadata.get("source"),
-                    "page": document.metadata.get("page"),
-                },
-            }
-        )
-
-    index.upsert(
-        vectors=vectors,
-        namespace=PINECONE_NAMESPACE,
+    response = pc.inference.embed(
+        model=EMBEDDING_MODEL,
+        inputs=[{"text": text} for text in texts],
+        parameters={
+            "input_type": input_type,
+            "truncate": "END",
+        },
     )
 
-    return len(vectors)
+    return [item["values"] for item in response.data]
+
+
+def index_documents(documents):
+    index = create_pinecone_index()
+
+    batch_size = 32
+    total_indexed = 0
+
+    for start in range(0, len(documents), batch_size):
+        batch = documents[start:start + batch_size]
+
+        texts = [
+            document.page_content
+            for document in batch
+        ]
+
+        embeddings = embed_texts(
+            texts,
+            input_type="passage",
+        )
+
+        vectors = []
+
+        for i, (document, vector) in enumerate(
+            zip(batch, embeddings),
+            start=start,
+        ):
+            vectors.append(
+                {
+                    "id": f"chunk-{i:04d}",
+                    "values": vector,
+                    "metadata": {
+                        "text": document.page_content,
+                        "source": document.metadata.get("source"),
+                        "page": document.metadata.get("page"),
+                    },
+                }
+            )
+
+        index.upsert(
+            vectors=vectors,
+            namespace=PINECONE_NAMESPACE,
+        )
+
+        total_indexed += len(vectors)
+
+    return total_indexed
 
 
 def retrieve(query: str, top_k: int = 4):
-    embedding_model = create_embedding_model()
     index = create_pinecone_index()
 
-    query_vector = embedding_model.embed_query(query)
+    query_embedding = embed_texts(
+        [query],
+        input_type="query",
+    )[0]
 
     results = index.query(
-        vector=query_vector,
+        vector=query_embedding,
         top_k=top_k,
         include_metadata=True,
         namespace=PINECONE_NAMESPACE,

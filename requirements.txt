@@ -4,8 +4,6 @@ python-dotenv
 pypdf
 langchain
 langchain-text-splitters
-langchain-huggingface
 langchain-groq
 langgraph
 pinecone
-sentence-transformers
